@@ -1,0 +1,115 @@
+# 操作系统生成的文件
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Windows
+*.tmp
+*.temp
+*.log
+*.cache
+
+# 编辑器和IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 临时文件
+*.bak
+*.backup
+*.orig
+
+# 压缩文件
+*.zip
+*.rar
+*.7z
+*.tar.gz
+
+# 不需要的文档草稿
+*.draft
+*.todo
+
+# 本地配置文件
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# 依赖目录（如果将来添加）
+node_modules/
+bower_components/
+
+# 构建输出（如果将来添加）
+dist/
+build/
+out/
+
+# 测试覆盖率报告
+coverage/
+*.lcov
+
+# 日志文件
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 运行时数据
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# 可选的npm缓存目录
+.npm
+
+# 可选的eslint缓存
+.eslintcache
+
+# 可选的REPL历史
+.node_repl_history
+
+# 输出的二进制文件
+*.exe
+*.dll
+*.so
+*.dylib
+
+# 数据库文件
+*.db
+*.sqlite
+*.sqlite3
+
+# 媒体文件（大文件）
+*.mp4
+*.avi
+*.mov
+*.wmv
+*.flv
+*.webm
+
+# 大型图片文件
+*.psd
+*.ai
+*.eps
+
+# 文档的临时文件
+~$*.docx
+~$*.xlsx
+~$*.pptx
+
+# 系统文件
+*.sys
+*.dll
+*.exe
+*.msi
+
+# 备份文件夹中的内容（保留文件夹结构但忽略内容）
+# bak/*
+# !bak/.gitkeep

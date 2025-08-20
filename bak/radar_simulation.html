@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>雷达威力仿真演示 - 作者: duudu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header .author {
+            font-size: 1.1em;
+            opacity: 0.8;
+            margin-bottom: 20px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .radar-display {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .controls {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .radar-canvas {
+            width: 100%;
+            height: 400px;
+            background: radial-gradient(circle at center, rgba(0,255,0,0.1) 0%, rgba(0,100,0,0.05) 50%, transparent 100%);
+            border-radius: 50%;
+            position: relative;
+            margin: 20px 0;
+            border: 2px solid rgba(0,255,0,0.3);
+        }
+
+        .radar-sweep {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 2px;
+            height: 50%;
+            background: linear-gradient(to top, rgba(0,255,0,0.8), transparent);
+            transform-origin: bottom center;
+            transform: translate(-50%, -100%) rotate(0deg);
+            animation: sweep 3s linear infinite;
+        }
+
+        @keyframes sweep {
+            from { transform: translate(-50%, -100%) rotate(0deg); }
+            to { transform: translate(-50%, -100%) rotate(360deg); }
+        }
+
+        .range-rings {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .range-ring {
+            position: absolute;
+            border: 1px solid rgba(0,255,0,0.2);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .target {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #ff4444;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px #ff4444;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 0.5; transform: translate(-50%, -50%) scale(1.2); }
+        }
+
+        .parameter {
+            margin-bottom: 20px;
+        }
+
+        .parameter label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .parameter input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255,255,255,0.2);
+            outline: none;
+            margin-bottom: 5px;
+        }
+
+        .parameter input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #4CAF50;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(76,175,80,0.5);
+        }
+
+        .parameter-value {
+            text-align: right;
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .results {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            grid-column: 1 / -1;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .formula {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .chart-container {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            margin-top: 20px;
+        }
+
+        .chart {
+            width: 100%;
+            height: 300px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .reset-btn {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255,107,107,0.3);
+        }
+
+        .reset-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255,107,107,0.4);
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 雷达威力仿真演示</h1>
+            <div class="author">作者: duudu</div>
+            <div class="formula">
+                R<sub>max</sub> = ⁴√[(P<sub>t</sub> × G<sub>t</sub> × G<sub>r</sub> × λ² × σ × M<sub>td</sub> × τ) / (k × T × F × L × SNR × (4π)³)]
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="radar-display">
+                <h3>🎯 雷达显示器</h3>
+                <div class="radar-canvas" id="radarCanvas">
+                    <div class="radar-sweep"></div>
+                    <div class="range-rings" id="rangeRings"></div>
+                    <div class="target" id="target"></div>
+                </div>
+                <div style="text-align: center; margin-top: 10px;">
+                    <span>最大探测距离: <span id="maxRangeDisplay" style="color: #4CAF50; font-weight: bold;">0 km</span></span>
+                </div>
+            </div>
+
+            <div class="controls">
+                <h3>⚙️ 参数控制</h3>
+                
+                <div class="parameter">
+                    <label for="pt">发射功率 P<sub>t</sub> (W)</label>
+                    <input type="range" id="pt" min="100" max="2000" value="480" step="10">
+                    <div class="parameter-value" id="ptValue">480 W</div>
+                </div>
+
+                <div class="parameter">
+                    <label for="gt">发射天线增益 G<sub>t</sub> (dB)</label>
+                    <input type="range" id="gt" min="15" max="40" value="25.6" step="0.1">
+                    <div class="parameter-value" id="gtValue">25.6 dB</div>
+                </div>
+
+                <div class="parameter">
+                    <label for="gr">接收天线增益 G<sub>r</sub> (dB)</label>
+                    <input type="range" id="gr" min="20" max="45" value="34" step="0.1">
+                    <div class="parameter-value" id="grValue">34 dB</div>
+                </div>
+
+                <div class="parameter">
+                    <label for="sigma">目标RCS σ (m²)</label>
+                    <input type="range" id="sigma" min="0.001" max="100" value="0.01" step="0.001">
+                    <div class="parameter-value" id="sigmaValue">0.01 m²</div>
+                </div>
+
+                <div class="parameter">
+                    <label for="snr">信噪比要求 SNR (dB)</label>
+                    <input type="range" id="snr" min="5" max="25" value="12.8" step="0.1">
+                    <div class="parameter-value" id="snrValue">12.8 dB</div>
+                </div>
+
+                <div class="parameter">
+                    <label for="freq">工作频率 (GHz)</label>
+                    <input type="range" id="freq" min="1" max="20" value="10" step="0.1">
+                    <div class="parameter-value" id="freqValue">10 GHz</div>
+                </div>
+
+                <button class="reset-btn" onclick="resetParameters()">🔄 重置参数</button>
+            </div>
+        </div>
+
+        <div class="results">
+            <h3>📊 计算结果</h3>
+            <div class="result-item">
+                <span>最大探测距离:</span>
+                <span class="result-value" id="maxRange">0 km</span>
+            </div>
+            <div class="result-item">
+                <span>波长:</span>
+                <span class="result-value" id="wavelength">0 m</span>
+            </div>
+            <div class="result-item">
+                <span>雷达方程分子 (AA):</span>
+                <span class="result-value" id="numerator">0 dB</span>
+            </div>
+            <div class="result-item">
+                <span>雷达方程分母 (BB):</span>
+                <span class="result-value" id="denominator">0 dB</span>
+            </div>
+            <div class="result-item">
+                <span>R<sup>4</sup> (dB):</span>
+                <span class="result-value" id="r4db">0 dB</span>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <h3>📈 参数影响分析</h3>
+            <canvas id="chartCanvas" class="chart" width="800" height="300"></canvas>
+            <div style="text-align: center; margin-top: 10px;">
+                <button onclick="showParameterEffect('pt')">发射功率影响</button>
+                <button onclick="showParameterEffect('gt')">发射增益影响</button>
+                <button onclick="showParameterEffect('sigma')">RCS影响</button>
+                <button onclick="showParameterEffect('snr')">SNR影响</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 作者: duudu
+        // 雷达参数和常数
+        const CONSTANTS = {
+            C: 3e8,           // 光速
+            K: 1.38e-23,      // 玻尔兹曼常数
+            T: 290,           // 噪声温度
+            F: 4,             // 噪声系数 (dB)
+            L: 8.24,          // 系统损耗 (dB)
+            MTD: 192,         // MTD积累增益
+            PULSE_WIDTH: 20e-6 // 脉冲宽度
+        };
+
+        // 获取DOM元素
+        const elements = {
+            pt: document.getElementById('pt'),
+            gt: document.getElementById('gt'),
+            gr: document.getElementById('gr'),
+            sigma: document.getElementById('sigma'),
+            snr: document.getElementById('snr'),
+            freq: document.getElementById('freq'),
+            target: document.getElementById('target'),
+            rangeRings: document.getElementById('rangeRings')
+        };
+
+        // 初始化
+        function init() {
+            createRangeRings();
+            updateCalculation();
+            bindEvents();
+            drawChart();
+        }
+
+        // 绑定事件
+        function bindEvents() {
+            Object.keys(elements).forEach(key => {
+                if (elements[key] && elements[key].addEventListener) {
+                    elements[key].addEventListener('input', updateCalculation);
+                }
+            });
+        }
+
+        // 创建距离环
+        function createRangeRings() {
+            const rangeRings = document.getElementById('rangeRings');
+            rangeRings.innerHTML = '';
+            
+            for (let i = 1; i <= 4; i++) {
+                const ring = document.createElement('div');
+                ring.className = 'range-ring';
+                const size = i * 80;
+                ring.style.width = size + 'px';
+                ring.style.height = size + 'px';
+                rangeRings.appendChild(ring);
+            }
+        }
+
+        // 更新计算
+        function updateCalculation() {
+            // 获取参数值
+            const pt = parseFloat(elements.pt.value);
+            const gt = parseFloat(elements.gt.value);
+            const gr = parseFloat(elements.gr.value);
+            const sigma = parseFloat(elements.sigma.value);
+            const snr = parseFloat(elements.snr.value);
+            const freq = parseFloat(elements.freq.value) * 1e9;
+
+            // 更新显示值
+            document.getElementById('ptValue').textContent = pt + ' W';
+            document.getElementById('gtValue').textContent = gt + ' dB';
+            document.getElementById('grValue').textContent = gr + ' dB';
+            document.getElementById('sigmaValue').textContent = sigma + ' m²';
+            document.getElementById('snrValue').textContent = snr + ' dB';
+            document.getElementById('freqValue').textContent = (freq/1e9).toFixed(1) + ' GHz';
+
+            // 计算波长
+            const lambda = CONSTANTS.C / freq;
+            document.getElementById('wavelength').textContent = (lambda * 100).toFixed(2) + ' cm';
+
+            // 转换为dB进行计算
+            const ptDb = 10 * Math.log10(pt);
+            const sigmaDb = 10 * Math.log10(sigma);
+            const mtdDb = 10 * Math.log10(CONSTANTS.MTD);
+            const pulseWidthDb = 10 * Math.log10(CONSTANTS.PULSE_WIDTH);
+            const lambdaDb = 20 * Math.log10(lambda);
+            
+            const kDb = 10 * Math.log10(CONSTANTS.K);
+            const tDb = 10 * Math.log10(CONSTANTS.T);
+            const zfDb = 10 * Math.log10(Math.pow(4 * Math.PI, 3));
+
+            // 计算分子和分母
+            const numerator = ptDb + gt + gr + sigmaDb + mtdDb + pulseWidthDb + lambdaDb;
+            const denominator = kDb + tDb + CONSTANTS.F + CONSTANTS.L + snr + zfDb;
+            
+            // 计算R^4 (dB)
+            const r4db = numerator - denominator;
+            
+            // 计算最大探测距离
+            const r4 = Math.pow(10, r4db / 10);
+            const maxRange = Math.pow(r4, 1/4) / 1000; // 转换为km
+
+            // 更新显示
+            document.getElementById('numerator').textContent = numerator.toFixed(2) + ' dB';
+            document.getElementById('denominator').textContent = denominator.toFixed(2) + ' dB';
+            document.getElementById('r4db').textContent = r4db.toFixed(2) + ' dB';
+            document.getElementById('maxRange').textContent = maxRange.toFixed(2) + ' km';
+            document.getElementById('maxRangeDisplay').textContent = maxRange.toFixed(2) + ' km';
+
+            // 更新目标位置
+            updateTargetPosition(maxRange);
+        }
+
+        // 更新目标位置
+        function updateTargetPosition(range) {
+            const target = document.getElementById('target');
+            const maxDisplayRange = 100; // km
+            const radarRadius = 180; // px
+            
+            let displayRange = Math.min(range, maxDisplayRange);
+            let distance = (displayRange / maxDisplayRange) * radarRadius;
+            
+            // 随机角度
+            const angle = (Date.now() / 50) % 360;
+            const radian = (angle * Math.PI) / 180;
+            
+            const x = Math.cos(radian) * distance;
+            const y = Math.sin(radian) * distance;
+            
+            target.style.left = `calc(50% + ${x}px)`;
+            target.style.top = `calc(50% + ${y}px)`;
+            
+            // 如果超出最大显示范围，隐藏目标
+            target.style.opacity = range > maxDisplayRange ? '0.3' : '1';
+        }
+
+        // 重置参数
+        function resetParameters() {
+            elements.pt.value = 480;
+            elements.gt.value = 25.6;
+            elements.gr.value = 34;
+            elements.sigma.value = 0.01;
+            elements.snr.value = 12.8;
+            elements.freq.value = 10;
+            updateCalculation();
+        }
+
+        // 绘制图表
+        function drawChart() {
+            const canvas = document.getElementById('chartCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // 清空画布
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制网格
+            ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+            ctx.lineWidth = 1;
+            
+            // 垂直网格线
+            for (let i = 0; i <= 10; i++) {
+                const x = (canvas.width / 10) * i;
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            
+            // 水平网格线
+            for (let i = 0; i <= 6; i++) {
+                const y = (canvas.height / 6) * i;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+            
+            // 绘制标题
+            ctx.fillStyle = 'white';
+            ctx.font = '16px Microsoft YaHei';
+            ctx.textAlign = 'center';
+            ctx.fillText('参数影响分析图', canvas.width / 2, 25);
+        }
+
+        // 显示参数影响
+        function showParameterEffect(parameter) {
+            const canvas = document.getElementById('chartCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            drawChart();
+            
+            // 获取当前参数值
+            const currentValues = {
+                pt: parseFloat(elements.pt.value),
+                gt: parseFloat(elements.gt.value),
+                gr: parseFloat(elements.gr.value),
+                sigma: parseFloat(elements.sigma.value),
+                snr: parseFloat(elements.snr.value),
+                freq: parseFloat(elements.freq.value)
+            };
+            
+            // 参数范围
+            const ranges = {
+                pt: { min: 100, max: 2000, step: 50 },
+                gt: { min: 15, max: 40, step: 1 },
+                gr: { min: 20, max: 45, step: 1 },
+                sigma: { min: 0.001, max: 0.1, step: 0.005 },
+                snr: { min: 5, max: 25, step: 1 },
+                freq: { min: 1, max: 20, step: 0.5 }
+            };
+            
+            const range = ranges[parameter];
+            const points = [];
+            
+            // 计算不同参数值下的探测距离
+            for (let value = range.min; value <= range.max; value += range.step) {
+                const testValues = { ...currentValues };
+                testValues[parameter] = value;
+                
+                const maxRange = calculateRange(testValues);
+                points.push({ x: value, y: maxRange });
+            }
+            
+            // 绘制曲线
+            if (points.length > 1) {
+                ctx.strokeStyle = '#4CAF50';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                
+                const xScale = canvas.width / (range.max - range.min);
+                const maxY = Math.max(...points.map(p => p.y));
+                const yScale = (canvas.height - 60) / maxY;
+                
+                points.forEach((point, index) => {
+                    const x = (point.x - range.min) * xScale;
+                    const y = canvas.height - 30 - (point.y * yScale);
+                    
+                    if (index === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                });
+                
+                ctx.stroke();
+                
+                // 标记当前值
+                const currentPoint = points.find(p => Math.abs(p.x - currentValues[parameter]) < range.step);
+                if (currentPoint) {
+                    const x = (currentPoint.x - range.min) * xScale;
+                    const y = canvas.height - 30 - (currentPoint.y * yScale);
+                    
+                    ctx.fillStyle = '#ff4444';
+                    ctx.beginPath();
+                    ctx.arc(x, y, 6, 0, 2 * Math.PI);
+                    ctx.fill();
+                }
+            }
+        }
+
+        // 计算探测距离
+        function calculateRange(params) {
+            const freq = params.freq * 1e9;
+            const lambda = CONSTANTS.C / freq;
+            
+            const ptDb = 10 * Math.log10(params.pt);
+            const sigmaDb = 10 * Math.log10(params.sigma);
+            const mtdDb = 10 * Math.log10(CONSTANTS.MTD);
+            const pulseWidthDb = 10 * Math.log10(CONSTANTS.PULSE_WIDTH);
+            const lambdaDb = 20 * Math.log10(lambda);
+            
+            const kDb = 10 * Math.log10(CONSTANTS.K);
+            const tDb = 10 * Math.log10(CONSTANTS.T);
+            const zfDb = 10 * Math.log10(Math.pow(4 * Math.PI, 3));
+            
+            const numerator = ptDb + params.gt + params.gr + sigmaDb + mtdDb + pulseWidthDb + lambdaDb;
+            const denominator = kDb + tDb + CONSTANTS.F + CONSTANTS.L + params.snr + zfDb;
+            
+            const r4db = numerator - denominator;
+            const r4 = Math.pow(10, r4db / 10);
+            const maxRange = Math.pow(r4, 1/4) / 1000;
+            
+            return maxRange;
+        }
+
+        // 页面加载完成后初始化
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
