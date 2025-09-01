@@ -27,7 +27,7 @@
 ### 本地部署
 ```bash
 # 克隆项目
-git clone https://github.com/yourusername/radar-power-simulation.git
+git clone https://github.com/duudu8453/radar-power-simulation.git
 
 # 进入项目目录
 cd radar-power-simulation
@@ -308,7 +308,7 @@ function calculateTotalGain(params) {
 
 - 专业背景：雷达系统工程
 - 技术专长：信号处理、系统仿真
-- 联系方式：[GitHub](https://github.com/duudu)
+- 联系方式：[GitHub](https://github.com/duudu8453)
 
 ## 🙏 致谢
 
